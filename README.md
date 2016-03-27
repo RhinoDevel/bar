@@ -14,13 +14,13 @@ This is done by comparing the checksums for the input folder created during each
 
 Verify ".bar" file in backup (output) folder:
 
-bar v <output folder path>
+`bar v <output folder path>`
 
 Checks, if the ".bar" file in the backup (output) folder matches the actual content of the backup folder.
 
 (Re-)create ".bar" file in backup (output) folder:
 
-bar c <output folder path>
+`bar c <output folder path>`
 
 (Re-)creates the ".bar" data file. File's content will reflect the backup (output) folder's contents.
 
