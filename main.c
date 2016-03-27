@@ -521,7 +521,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
                 break;
             }
 
-            printf("Reading data from file \"%s\" ...\n", dataFilePath);
+            printf("%s - Reading data from file \"%s\" ...\n", Sys_get_time_str(false, true), dataFilePath);
             outputEle = json_read_from_file(dataFilePath);
             if(outputEle==NULL)
             {
@@ -530,7 +530,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
             }
         }
 
-        printf("Creating data from input folder \"%s\" ...\n", inInputPath);
+        printf("%s - Creating data from input folder \"%s\" ...\n", Sys_get_time_str(false, true), inInputPath);
         inputEle = create_json_dir(inInputPath, ".pib"); // Skips all .pib files.
         if(inputEle==NULL)
         {
@@ -620,7 +620,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
         //
         if(!Stack_isEmpty(toDelete))
         {
-            printf("Deleting folders and files ...\n");
+            printf("%s - Deleting folders and files ...\n", Sys_get_time_str(false, true));
             do
             {
                 char * const path = Stack_pop(toDelete), // (takes ownership)
@@ -648,7 +648,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
         //
         if(!Stack_isEmpty(toCreate))
         {
-            printf("Creating folders and files ...\n");
+            printf("%s - Creating folders and files ...\n", Sys_get_time_str(false, true));
             do
             {
                 char * const path = Stack_pop(toCreate), // (takes ownership)
@@ -679,7 +679,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
         //
         if(!Stack_isEmpty(toUpdate))
         {
-            printf("Updating folders and files ...\n");
+            printf("%s - Updating folders and files ...\n", Sys_get_time_str(false, true));
             do
             {
                 char * const path = Stack_pop(toUpdate), // (takes ownership)
@@ -742,7 +742,7 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
 
     char* fullPath = FileSys_GetFullPath(inPath, ".pib");
 
-    printf("Reading data from file \"%s\" ...\n", fullPath);
+    printf("%s - Reading data from file \"%s\" ...\n", Sys_get_time_str(false, true), fullPath);
     struct JsonEle * loadedEle = json_read_from_file(fullPath);
 
     free(fullPath);
@@ -750,12 +750,12 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
 
     if(loadedEle!=NULL)
     {
-        printf("Creating data from folder \"%s\" ...\n", inPath);
+        printf("%s - Creating data from folder \"%s\" ...\n", Sys_get_time_str(false, true), inPath);
         struct JsonEle * ele = create_json_dir(inPath, ".pib");
 
         if(ele!=NULL)
         {
-            printf("Comparing data from file and folder ...\n");
+            printf("%s - Comparing data from file and folder ...\n", Sys_get_time_str(false, true));
             if(!JsonEle_areEqual(loadedEle, ele, true))
             {
                 *inOutErrMsg = "Folder contents are different from saved data!";
@@ -782,14 +782,14 @@ static void cmd_create(char const * const inPath, char const * * const inOutErrM
 {
     assert(inPath!=NULL);
 
-    printf("Creating data from folder \"%s\" ...\n", inPath);
+    printf("%s - Creating data from folder \"%s\" ...\n", Sys_get_time_str(false, true), inPath);
     struct JsonEle* ele = create_json_dir(inPath, ".pib");
 
     if(ele!=NULL)
     {
         char * const fullPath = FileSys_GetFullPath(inPath, ".pib");
 
-        printf("Writing data to file \"%s\" ...\n", fullPath);
+        printf("%s - Writing data to file \"%s\" ...\n", Sys_get_time_str(false, true), fullPath);
         if(!json_write_to_file(ele, fullPath, true))
         {
             *inOutErrMsg = "Failed to write to file!";
@@ -844,7 +844,7 @@ int main(int argc, char* argv[])
                 {
                     break;
                 }
-                printf("Successfully backed up.\n");
+                printf("%s - Successfully backed up.\n", Sys_get_time_str(false, true));
                 break;
 
             case 'v': // Verify (that ".pib" file exists in given folder and that its content is correctly describing the folder's content).
@@ -859,7 +859,7 @@ int main(int argc, char* argv[])
                 {
                     break;
                 }
-                printf("Successfully verified.\n");
+                printf("%s - Successfully verified.\n", Sys_get_time_str(false, true));
                 break;
 
             case 'c': // Create (a ".pib" file inside given folder that describes its content).
@@ -874,7 +874,7 @@ int main(int argc, char* argv[])
                 {
                     break;
                 }
-                printf("Successfully created.\n");
+                printf("%s - Successfully created.\n", Sys_get_time_str(false, true));
                 break;
 
             default:
