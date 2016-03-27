@@ -1,5 +1,5 @@
 # pib
-**P**ortable **i**ncremental **b**ackup utility written in C without any dependencies.
+**P**ortable **i**ncremental **b**ackup utility written in C (C11) without any dependencies.
 
 # Usage
 **Create backup of folder (usually the only command you need)**
