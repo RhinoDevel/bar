@@ -2,7 +2,7 @@
 Portable incremental backup utility written in C without any dependencies.
 
 # Usage
-Create first backup of folder:
+**Create first backup of folder**
 
 `bar b <input folder path> <output folder path>`
 
@@ -12,13 +12,13 @@ Each time the exact same command as above will be executed after the first backu
 
 This is done by comparing the checksums for the input folder created during each run with the checksums stored in ".bar" data file to be found in backup (output) folder.
 
-Verify ".bar" file in backup (output) folder:
+**Verify ".bar" file in backup (output) folder**
 
 `bar v <output folder path>`
 
 Checks, if the ".bar" file in the backup (output) folder matches the actual content of the backup folder.
 
-(Re-)create ".bar" file in backup (output) folder:
+**(Re-)create ".bar" file in backup (output) folder**
 
 `bar c <output folder path>`
 
