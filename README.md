@@ -4,7 +4,7 @@ Portable incremental backup utility written in C without any dependencies.
 # Usage
 Create first backup of folder:
 
-bar b <input folder path> <output folder path>
+`bar b <input folder path> <output folder path>`
 
 This will copy all files from input to output folder and create a file ".bar" in output folder that holds checksums for all stored files.
 
