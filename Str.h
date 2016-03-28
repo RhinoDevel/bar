@@ -14,6 +14,16 @@ char* Str_from_double_create(double const inVal);
 
 /** Return a new string holding given string A plus string B.
  *
+ * * Takes owneship of string A!
+ * - Uses realloc() to append string B directly behind memory of string A.
+ * - Returns NULL on error.
+ */
+char* Str_append_create(char * const inStrA, char const * const inStrB);
+
+/** Return a new string holding given string A plus string B.
+ *
+ * - Does NOT take ownership of any given parameter.
+ * - Does NOT use realloc().
  * - Returns NULL on error.
  */
 char* Str_concat_create(char const * const inStrA, char const * const inStrB);

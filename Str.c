@@ -17,13 +17,47 @@ char* Str_from_double_create(double const inVal)
 
     if(strLen>0)
     {
-        retVal = (char*)malloc((((size_t)strLen)+1)*sizeof(char));
+        retVal = malloc((((size_t)strLen)+1)*(sizeof *retVal));
         assert(retVal!=NULL);
 
         if(sprintf(retVal, formatStr, inVal)!=strLen)
         {
             free(retVal);
             retVal = NULL;
+        }
+    }
+
+    return retVal;
+}
+
+char* Str_append_create(char * const inStrA, char const * const inStrB)
+{
+    char* retVal = NULL;
+
+    assert((retVal!=NULL)&&(inStrB!=NULL));
+    if((retVal!=NULL)&&(inStrB!=NULL))
+    {
+        size_t const aLen = strlen(inStrA),
+            bLen = strlen(inStrB),
+            valLen = aLen+bLen+1;
+
+        retVal = realloc(inStrA, valLen*(sizeof *retVal));
+        assert(retVal!=NULL);
+
+        if(valLen==1)
+        {
+            retVal[0] = '\0';
+        }
+        else
+        {
+            size_t pos = 0;
+
+            strncpy(retVal+pos, retVal, aLen);
+            pos += aLen;
+            strncpy(retVal+pos, inStrB, bLen);
+            pos += bLen;
+            retVal[pos] = '\0';
+            assert(pos==(valLen-1));
         }
     }
 
@@ -41,7 +75,7 @@ char* Str_concat_create(char const * const inStrA, char const * const inStrB)
             bLen = strlen(inStrB),
             valLen = aLen+bLen+1;
 
-        retVal = (char*)malloc(valLen*sizeof(char));
+        retVal = malloc(valLen*(sizeof *retVal));
         assert(retVal!=NULL);
 
         if(valLen==1)
@@ -74,7 +108,7 @@ char* Str_copy_create(char const * const inStr)
     {
         size_t const strLen = strlen(inStr)+1;
 
-        retVal = (char*)malloc(strLen*sizeof(char));
+        retVal = malloc(strLen*(sizeof *retVal));
         assert(retVal!=NULL);
         strncpy(retVal, inStr, strLen);
     }
@@ -152,7 +186,7 @@ char* Str_string_create(char const * const inStr, size_t const inLen, char const
 
         size_t const len = terminatorPos-firstCharPos; // (without terminator)
 
-        buf = malloc((sizeof *buf)*(len+1));
+        buf = malloc((len+1)*(sizeof *buf));
         assert(buf!=NULL);
 
         strncpy(buf, inStr+firstCharPos, len);
