@@ -35,7 +35,7 @@ char* Str_append_create(char * const inStrA, char const * const inStrB)
     char* retVal = NULL;
 
     assert((inStrA!=NULL)&&(inStrB!=NULL));
-    if((retVal!=NULL)&&(inStrB!=NULL))
+    if((inStrA!=NULL)&&(inStrB!=NULL))
     {
         size_t const aLen = strlen(inStrA),
             bLen = strlen(inStrB),
