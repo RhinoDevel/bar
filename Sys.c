@@ -93,15 +93,9 @@ char* Sys_get_stdin()
         //
         if(i==(len-1))
         {
-            char* buf = retVal;
-            size_t const bufLen = len;
-
             len = len+granularity;
-            retVal = malloc(len*(sizeof *retVal));
+            retVal = realloc(retVal, len*(sizeof *retVal));
             assert(retVal!=NULL);
-
-            strncpy(retVal, buf, bufLen);
-            free(buf);
         }
 
         ++i;
