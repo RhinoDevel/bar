@@ -91,7 +91,7 @@ static bool FillBuf()
                 sByteCount += congruent448ByteCount; // For bits "0" to append, such that the resulting length in bits is congruent to 448 (mod 512).
                 sByteCount += 64/8; // For ml to append in a 64-bit big-endian integer. Thus, the total length is a multiple of 512 bits.
 
-                sBytePtr = (uint8_t*)malloc(sByteCount); // Creates buffer.
+                sBytePtr = malloc(sByteCount*(sizeof *sBytePtr)); // Creates buffer.
                 if(sBytePtr==NULL)
                 {
                     retVal = false;
@@ -221,7 +221,7 @@ uint8_t* Sha1_create_from_file(FILE * const inFilePtr)
             assert(_fileCachePtr!=NULL);
         }
 
-        hashPtr = (uint8_t*)malloc(160/8);
+        hashPtr = malloc((160/8)*(sizeof *hashPtr));
         assert(hashPtr!=NULL);
 
         do
