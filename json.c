@@ -29,8 +29,7 @@
  */
 static char* stringify(struct JsonEle * const inEle, char * const inStr)
 {
-    char *retVal = inStr,
-        *buf = NULL;
+    char *retVal = inStr;
     struct JsonEle * cur = inEle;
 
     assert(inEle!=NULL);
@@ -50,85 +49,48 @@ static char* stringify(struct JsonEle * const inEle, char * const inStr)
         {
             case JsonType_null:
                 assert(strlen(retVal)>0);
-                buf = retVal;
-                retVal = Str_concat_create(buf, "null");
-                free(buf);
-                buf = NULL;
+                retVal = Str_append_create(retVal, "null");
                 break;
 
             case JsonType_boolean:
                 assert(strlen(retVal)>0);
-                buf = retVal;
-                retVal = Str_concat_create(buf, (*((bool*)(cur->val->val)))?"true":"false");
-                free(buf);
-                buf = NULL;
+                retVal = Str_append_create(retVal, (*((bool*)(cur->val->val)))?"true":"false");
                 break;
 
             case JsonType_string:
                 assert(strlen(retVal)>0);
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, "\"");
-                free(buf);
-                buf = NULL;
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, (char*)(cur->val->val));
-                free(buf);
-                buf = NULL;
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, "\"");
-                free(buf);
-                buf = NULL;
+                retVal = Str_append_create(retVal, "\"");
+                retVal = Str_append_create(retVal, (char*)(cur->val->val));
+                retVal = Str_append_create(retVal, "\"");
                 break;
 
             case JsonType_number:
             {
                 assert(strlen(retVal)>0);
-                
+
                 char * const dblStr = Str_from_double_create(*((double*)(cur->val->val)));
-                
-                buf = retVal;
-                retVal = Str_concat_create(buf, dblStr);
+
+                retVal = Str_append_create(retVal, dblStr);
                 free(dblStr);
-                free(buf);
-                buf = NULL;
                 break;
             }
 
             case JsonType_arr:
-                buf = retVal;
-                retVal = Str_concat_create(buf, "[");
-                free(buf);
-                buf = NULL;
-
+                retVal = Str_append_create(retVal, "[");
                 if(cur->val->val!=NULL)
                 {
                     retVal = stringify((struct JsonEle *)(cur->val->val), retVal);
                 }
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, "]");
-                free(buf);
-                buf = NULL;
+                retVal = Str_append_create(retVal, "]");
                 break;
 
             case JsonType_obj:
-                buf = retVal;
-                retVal = Str_concat_create(buf, "{");
-                free(buf);
-                buf = NULL;
-
+                retVal = Str_append_create(retVal, "{");
                 if(cur->val->val!=NULL)
                 {
                     retVal = stringify((struct JsonEle *)(cur->val->val), retVal);
                 }
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, "}");
-                free(buf);
-                buf = NULL;
+                retVal = Str_append_create(retVal, "}");
                 break;
 
             case JsonType_prop:
@@ -137,26 +99,10 @@ static char* stringify(struct JsonEle * const inEle, char * const inStr)
 
                 assert(strlen(retVal)>0);
 
-                buf = retVal;
-                retVal = Str_concat_create(buf, "\"");
-                free(buf);
-                buf = NULL;
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, jsonProp->name);
-                free(buf);
-                buf = NULL;
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, "\"");
-                free(buf);
-                buf = NULL;
-
-                buf = retVal;
-                retVal = Str_concat_create(buf, ":");
-                free(buf);
-                buf = NULL;
-
+                retVal = Str_append_create(retVal, "\"");
+                retVal = Str_append_create(retVal, jsonProp->name);
+                retVal = Str_append_create(retVal, "\"");
+                retVal = Str_append_create(retVal, ":");
                 retVal = stringify(jsonProp->ele, retVal);
                 break;
             }
@@ -169,10 +115,7 @@ static char* stringify(struct JsonEle * const inEle, char * const inStr)
         cur = cur->next;
         if(cur!=NULL)
         {
-            buf = retVal;
-            retVal = Str_concat_create(buf, ",");
-            free(buf);
-            buf = NULL;
+            retVal = Str_append_create(retVal, ",");
         }
     }while(cur!=NULL);
 
