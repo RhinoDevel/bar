@@ -28,9 +28,9 @@ char * FileSys_GetFullPath(char const * const inPath, char const * const inName)
     assert(retVal!=NULL);
 
     retVal[0] = '\0';
-    strlcat(retVal, inPath, pathLen);
-    strlcat(retVal, _dir_separator, pathLen);
-    strlcat(retVal, inName, pathLen);
+    strncat(retVal, inPath, pathLen);
+    strncat(retVal, _dir_separator, pathLen);
+    strncat(retVal, inName, pathLen);
 
     return retVal;
 }
