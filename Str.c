@@ -50,10 +50,8 @@ char* Str_append_create(char * const inStrA, char const * const inStrB)
         }
         else
         {
-            size_t pos = 0;
+            size_t pos = aLen;
 
-            strncpy(retVal+pos, retVal, aLen);
-            pos += aLen;
             strncpy(retVal+pos, inStrB, bLen);
             pos += bLen;
             retVal[pos] = '\0';
