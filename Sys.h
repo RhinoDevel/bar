@@ -18,6 +18,8 @@ bool Sys_is_big_endian();
  */
 char* Sys_create_time_str(bool const inDate, bool const inSeconds);
 
+char* Sys_get_stdin();
+
 #ifdef	__cplusplus
 }
 #endif //__cplusplus
