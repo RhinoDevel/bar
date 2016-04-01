@@ -23,7 +23,7 @@ bool Sys_is_big_endian()
     return u.uC[0]==1;
 }
 
-char* Sys_get_time_str(bool const inDate, bool const inSeconds)
+char* Sys_create_time_str(bool const inDate, bool const inSeconds)
 {
     char* retVal = NULL;
     time_t t = time(NULL);

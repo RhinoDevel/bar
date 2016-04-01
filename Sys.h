@@ -12,9 +12,11 @@ extern "C" {
 
 bool Sys_is_big_endian();
 
-char* Sys_get_time_str(bool const inDate, bool const inSeconds);
-
-char* Sys_get_stdin();
+/** Return "time" string.
+ *
+ * - Caller takes ownership of return value.
+ */
+char* Sys_create_time_str(bool const inDate, bool const inSeconds);
 
 #ifdef	__cplusplus
 }
