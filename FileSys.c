@@ -403,7 +403,6 @@ bool FileSys_copyFile(char const * const inInputPath, char const * const inOutpu
     return retVal;
 }
 
-
 bool FileSys_copy(char const * const inInputPath, char const * const inOutputPath)
 {
     bool retVal = false;
