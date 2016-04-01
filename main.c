@@ -122,6 +122,7 @@ static struct JsonEle * create_json_dir(char const * const inPath, char const * 
                     case FileSys_EntryType_File:
                         if((inRootSkipFileName==NULL)||(strcmp(inRootSkipFileName, entry->d_name)!=0))
                         {
+                            Deb_line("\"%s\"", entry->d_name);
                             ele = create_json_file(inPath, entry->d_name);
                             assert(ele!=NULL);
                         }
@@ -655,6 +656,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
                     * const fullInputPath = FileSys_GetFullPath(inInputPath, path),
                     * const fullOutputPath = FileSys_GetFullPath(inOutputPath, path);
 
+                Deb_line("\"%s\"", path);
                 if(!FileSys_copy(fullInputPath, fullOutputPath))
                 {
                     *inOutErrMsg = "Failed to create at least one file or folder from output folder!";
@@ -686,6 +688,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
                     * const fullInputPath = FileSys_GetFullPath(inInputPath, path),
                     * const fullOutputPath = FileSys_GetFullPath(inOutputPath, path);
 
+                Deb_line("\"%s\"", path);
                 if(!FileSys_copy(fullInputPath, fullOutputPath))
                 {
                     *inOutErrMsg = "Failed to update at least one file or folder from output folder!";
