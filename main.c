@@ -880,6 +880,28 @@ int main(int argc, char* argv[])
                 Sys_log_line(false, true, "Successfully created.");
                 break;
 
+            case 'i': // Gather and print information about folder at path given.
+            {
+                if(argc!=(1+2))
+                {
+                    errMsg = "Please enter info command and path to folder like: pib i <path>";
+                    break;
+                }
+                inputDirPath = argv[2];
+
+                int const count = FileSys_getContentCount(inputDirPath);
+
+                if(count>=0)
+                {
+                    Sys_log_line(false, true, "Content count (files & folders): %d.", count);
+                }
+                else
+                {
+                    Sys_log_line(false, true, "Failed to count content of \"%s\"!", inputDirPath);
+                }
+                break;
+            }
+
             default:
                 errMsg = "Please enter a supported command.";
                 break;
