@@ -70,6 +70,12 @@ bool FileSys_copyFile(char const * const inInputPath, char const * const inOutpu
  */
 bool FileSys_copy(char const * const inInputPath, char const * const inOutputPath);
 
+/** Return count of files and folder inside directory at given path.
+ *
+ * - Returns -1 on error.
+ */
+int FileSys_getContentCount(char const * const inPath);
+
 #ifdef __cplusplus
 }
 #endif
