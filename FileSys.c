@@ -505,7 +505,7 @@ bool FileSys_copy(char const * const inInputPath, char const * const inOutputPat
     return retVal;
 }
 
-int FileSys_getContentCount(char const * const inPath)
+int FileSys_getContentCount(char const * const inPath, void (*inIncrementFunc)(void))
 {
     int retVal = 0;
     bool errOcc = false;
@@ -525,11 +525,15 @@ int FileSys_getContentCount(char const * const inPath)
                 {
                     case FileSys_EntryType_File:
                         ++retVal;
+                        if(inIncrementFunc!=NULL)
+                        {
+                            (*inIncrementFunc)();
+                        }
                         break;
 
                     case FileSys_EntryType_Dir:
                     {
-                        int const subCount = FileSys_getContentCount(fullPath); // *** RECURSION ***
+                        int const subCount = FileSys_getContentCount(fullPath, inIncrementFunc); // *** RECURSION ***
 
                         if(subCount<0)
                         {
@@ -538,6 +542,10 @@ int FileSys_getContentCount(char const * const inPath)
                         }
 
                         ++retVal; // For the folder.
+                        if(inIncrementFunc!=NULL)
+                        {
+                            (*inIncrementFunc)();
+                        }
                         retVal += subCount; // For the content of the folder.
                         break;
                     }

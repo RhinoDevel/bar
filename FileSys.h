@@ -74,7 +74,7 @@ bool FileSys_copy(char const * const inInputPath, char const * const inOutputPat
  *
  * - Returns -1 on error.
  */
-int FileSys_getContentCount(char const * const inPath);
+int FileSys_getContentCount(char const * const inPath, void (*inIncrementFunc)(void));
 
 #ifdef __cplusplus
 }
