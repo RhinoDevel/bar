@@ -505,7 +505,7 @@ bool FileSys_copy(char const * const inInputPath, char const * const inOutputPat
     return retVal;
 }
 
-int FileSys_getContentCount(char const * const inPath, void (*inIncrementFunc)(void))
+int FileSys_getContentCount(char const * const inPath, off_t * const inOutSize, void (*inIncrementFunc)(void))
 {
     int retVal = 0;
     bool errOcc = false;
@@ -529,11 +529,22 @@ int FileSys_getContentCount(char const * const inPath, void (*inIncrementFunc)(v
                         {
                             (*inIncrementFunc)();
                         }
+                        if(inOutSize!=NULL)
+                        {
+                            off_t const size = FileSys_GetFileSize(fullPath); // MT_TODO: TEST: Increase (double?) speed by using lstat() just once for getting entry type and size!
+
+                            if(size==-1)
+                            {
+                                errOcc = true;
+                                break;
+                            }
+                            *inOutSize += size;
+                        }
                         break;
 
                     case FileSys_EntryType_Dir:
                     {
-                        int const subCount = FileSys_getContentCount(fullPath, inIncrementFunc); // *** RECURSION ***
+                        int const subCount = FileSys_getContentCount(fullPath, inOutSize, inIncrementFunc); // *** RECURSION ***
 
                         if(subCount<0)
                         {

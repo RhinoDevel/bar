@@ -72,9 +72,11 @@ bool FileSys_copy(char const * const inInputPath, char const * const inOutputPat
 
 /** Return count of files and folder inside directory at given path.
  *
+ * * Make sure that optionally given pointer to full size count variable is set to 0.
+ * - Optionally given increment function pointer will be called each time the content count gets incremented.
  * - Returns -1 on error.
  */
-int FileSys_getContentCount(char const * const inPath, void (*inIncrementFunc)(void));
+int FileSys_getContentCount(char const * const inPath, off_t * const inOutSize, void (*inIncrementFunc)(void));
 
 #ifdef __cplusplus
 }
