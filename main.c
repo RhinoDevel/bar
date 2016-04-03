@@ -486,6 +486,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
             exists = false,
             empty = false,
             errOcc = false;
+        off_t size = 0;
 
         if(!FileSys_exists(inInputPath, &exists))
         {
@@ -572,9 +573,11 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
 
         reprint_count_val = 0;
         reprint_count_prefix = "Input folder content count (files & folders): ";
-        int const count = FileSys_getContentCount(inInputPath, reprint_count);
+
+        int const count = FileSys_getContentCount(inInputPath, &size, reprint_count);
         //
         printf("\n");
+        Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
         Sys_log_line(false, true, "Creating data from input folder \"%s\" ...", inInputPath);
         bar_max = count;
@@ -801,11 +804,13 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
 
     if(loadedEle!=NULL)
     {
+        off_t size = 0;
         reprint_count_val = 0;
         reprint_count_prefix = "Content count (files & folders): ";
-        int const count = FileSys_getContentCount(inPath, reprint_count);
+        int const count = FileSys_getContentCount(inPath, &size, reprint_count);
         //
         printf("\n");
+        Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
         Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
         bar_max = count;
@@ -840,13 +845,16 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
 
 static void cmd_create(char const * const inPath, char const * * const inOutErrMsg)
 {
+    off_t size = 0;
+
     assert(inPath!=NULL);
 
     reprint_count_val = 0;
     reprint_count_prefix = "Content count (files & folders): ";
-    int const count = FileSys_getContentCount(inPath, reprint_count);
+    int const count = FileSys_getContentCount(inPath, &size, reprint_count);
     //
     printf("\n");
+    Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
     if(count>=0)
     {
@@ -957,6 +965,8 @@ int main(int argc, char* argv[])
 
             case 'i': // Gather and print information about folder at path given.
             {
+                off_t size = 0;
+
                 if(argc!=(1+2))
                 {
                     errMsg = "Please enter info command and path to folder like: pib i <path>";
@@ -966,7 +976,7 @@ int main(int argc, char* argv[])
 
                 reprint_count_val = 0;
                 reprint_count_prefix = "Content count (files & folders): ";
-                int const count = FileSys_getContentCount(inputDirPath, reprint_count);
+                int const count = FileSys_getContentCount(inputDirPath, &size, reprint_count);
                 //
                 printf("\n");
 
@@ -975,6 +985,7 @@ int main(int argc, char* argv[])
                     Sys_log_line(false, true, "Failed to count content of \"%s\"!", inputDirPath);
                     break;
                 }
+                Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
                 break;
             }
 
