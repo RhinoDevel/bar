@@ -21,8 +21,34 @@
 #include "Sha1.h"
 #include "FileSys.h"
 #include "Stack.h"
+#include "ProgressBar.h"
 
-static struct JsonEle * create_json_dir(char const * const inPath, char const * const inRootSkipFileName);
+static int reprint_count_val = 0;
+static char const * reprint_count_prefix = NULL;
+
+static int bar_val = -1;
+static int bar_max = -1;
+
+static struct JsonEle * create_json_dir(char const * const inPath, char const * const inRootSkipFileName, void (*inAddEntryFunc)(void));
+
+static void reprint_count()
+{
+    ++reprint_count_val;
+
+    printf("\r");
+    if(reprint_count_prefix!=NULL)
+    {
+        printf("%s", reprint_count_prefix);
+    }
+    printf("%d", reprint_count_val);
+    fflush(stdout);
+}
+
+static void print_next_bar()
+{
+    ++bar_val;
+    ProgressBar_print(0, bar_val, bar_max, 40, true);
+}
 
 /** Get JSON element holding entry for file at given path with given name.
  *
@@ -53,7 +79,7 @@ static struct JsonEle * create_json_file(char const * const inPath, char const *
  *  - Caller takes ownership of return value.
  *  - Returns NULL on error.
  */
-static struct JsonEle * create_json_subdir(char const * const inPath, char const * const inName)
+static struct JsonEle * create_json_subdir(char const * const inPath, char const * const inName, void (*inAddEntryFunc)(void))
 {
     struct JsonEle * retVal = NULL,
         * subEle = NULL;
@@ -65,7 +91,7 @@ static struct JsonEle * create_json_subdir(char const * const inPath, char const
 
     JsonObj_add(obj, Str_copy_create("name"), JsonType_string, Str_copy_create(inName));
 
-    subEle = create_json_dir(fullPath, NULL /* Never skip any file in sub directories. */); // *** "RECURSION" ***
+    subEle = create_json_dir(fullPath, NULL /* Never skip any file in sub directories. */, inAddEntryFunc); // *** "RECURSION" ***
     if(subEle!=NULL)
     {
         JsonObj_add(obj, Str_copy_create("content"), JsonType_arr, subEle->val->val);
@@ -88,7 +114,7 @@ static struct JsonEle * create_json_subdir(char const * const inPath, char const
     return retVal;
 }
 
-static struct JsonEle * create_json_dir(char const * const inPath, char const * const inRootSkipFileName)
+static struct JsonEle * create_json_dir(char const * const inPath, char const * const inRootSkipFileName, void (*inAddEntryFunc)(void))
 {
     struct JsonEle * retVal = NULL;
     struct JsonArr * const arr = JsonArr_create();
@@ -116,22 +142,35 @@ static struct JsonEle * create_json_dir(char const * const inPath, char const * 
                 switch(FileSys_GetEntryType(fullPath))
                 {
                     case FileSys_EntryType_Dir:
-                        ele = create_json_subdir(inPath, entry->d_name); // *** "RECURSION" ***
-                        errOcc = ele==NULL;
+                        ele = create_json_subdir(inPath, entry->d_name, inAddEntryFunc); // *** "RECURSION" ***
+                        if(ele==NULL)
+                        {
+                            errOcc = true;
+                            break;
+                        }
+                        if(inAddEntryFunc!=NULL)
+                        {
+                            inAddEntryFunc();
+                        }
                         break;
                     case FileSys_EntryType_File:
                         if((inRootSkipFileName==NULL)||(strcmp(inRootSkipFileName, entry->d_name)!=0))
                         {
-                            Deb_line("\"%s\"", entry->d_name);
+                            //Deb_line("\"%s\"", entry->d_name);
                             ele = create_json_file(inPath, entry->d_name);
                             assert(ele!=NULL);
+
+                            if(inAddEntryFunc!=NULL)
+                            {
+                                inAddEntryFunc();
+                            }
                         }
-#ifndef NDEBUG
-                        else
-                        {
-                            Deb_line("Skipping file \"%s\".", fullPath);
-                        }
-#endif //NDEBUG
+//#ifndef NDEBUG
+//                        else
+//                        {
+//                            Deb_line("Skipping file \"%s\".", fullPath);
+//                        }
+//#endif //NDEBUG
                         break;
 
                     case FileSys_EntryType_Invalid:
@@ -531,8 +570,17 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
             }
         }
 
+        reprint_count_val = 0;
+        reprint_count_prefix = "Input folder content count (files & folders): ";
+        int const count = FileSys_getContentCount(inInputPath, reprint_count);
+        //
+        printf("\n");
+
         Sys_log_line(false, true, "Creating data from input folder \"%s\" ...", inInputPath);
-        inputEle = create_json_dir(inInputPath, ".pib"); // Skips all .pib files.
+        bar_max = count;
+        bar_val = 0;
+        inputEle = create_json_dir(inInputPath, ".pib", print_next_bar); // Skips all .pib files.
+        printf("\n");
         if(inputEle==NULL)
         {
             *inOutErrMsg = "Failed to create data from input folder!";
@@ -753,8 +801,17 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
 
     if(loadedEle!=NULL)
     {
+        reprint_count_val = 0;
+        reprint_count_prefix = "Content count (files & folders): ";
+        int const count = FileSys_getContentCount(inPath, reprint_count);
+        //
+        printf("\n");
+
         Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
-        struct JsonEle * ele = create_json_dir(inPath, ".pib");
+        bar_max = count;
+        bar_val = 0;
+        struct JsonEle * ele = create_json_dir(inPath, ".pib", print_next_bar); // Skips all .pib files.
+        printf("\n");
 
         if(ele!=NULL)
         {
@@ -785,25 +842,43 @@ static void cmd_create(char const * const inPath, char const * * const inOutErrM
 {
     assert(inPath!=NULL);
 
-    Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
-    struct JsonEle* ele = create_json_dir(inPath, ".pib");
+    reprint_count_val = 0;
+    reprint_count_prefix = "Content count (files & folders): ";
+    int const count = FileSys_getContentCount(inPath, reprint_count);
+    //
+    printf("\n");
 
-    if(ele!=NULL)
+    if(count>=0)
     {
-        char * const fullPath = FileSys_GetFullPath(inPath, ".pib");
+        Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
+        bar_max = count;
+        bar_val = 0;
+        struct JsonEle* ele = create_json_dir(inPath, ".pib", print_next_bar);
+        printf("\n");
 
-        Sys_log_line(false, true, "Writing data to file \"%s\" ...", fullPath);
-        if(!json_write_to_file(ele, fullPath, true))
+        if(ele!=NULL)
         {
-            *inOutErrMsg = "Failed to write to file!";
-        }
+            char * const fullPath = FileSys_GetFullPath(inPath, ".pib");
 
-        free(fullPath);
+            Sys_log_line(false, true, "Writing data to file \"%s\" ...", fullPath);
+            if(!json_write_to_file(ele, fullPath, true))
+            {
+                *inOutErrMsg = "Failed to write to file!";
+            }
+
+            free(fullPath);
+        }
+        else
+        {
+            *inOutErrMsg = "Failed to create data!";
+        }
     }
     else
     {
-        *inOutErrMsg = "Failed to create data!";
+        *inOutErrMsg = "Failed to count files and folders!";
     }
+
+
 }
 
 int main(int argc, char* argv[])
@@ -889,15 +964,16 @@ int main(int argc, char* argv[])
                 }
                 inputDirPath = argv[2];
 
-                int const count = FileSys_getContentCount(inputDirPath);
+                reprint_count_val = 0;
+                reprint_count_prefix = "Content count (files & folders): ";
+                int const count = FileSys_getContentCount(inputDirPath, reprint_count);
+                //
+                printf("\n");
 
-                if(count>=0)
-                {
-                    Sys_log_line(false, true, "Content count (files & folders): %d.", count);
-                }
-                else
+                if(count<0)
                 {
                     Sys_log_line(false, true, "Failed to count content of \"%s\"!", inputDirPath);
+                    break;
                 }
                 break;
             }
