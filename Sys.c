@@ -112,7 +112,7 @@ void Sys_log_line(bool const inDate, bool const inSeconds, char const * const in
     va_list argPtr;
     char * const timePtr = Sys_create_time_str(inDate, inSeconds);
 
-    printf(timePtr);
+    printf("%s", timePtr);
     printf(" - ");
 
     assert(inStr!=NULL);
