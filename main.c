@@ -577,6 +577,12 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
         int const count = FileSys_getContentCount(inInputPath, &size, reprint_count);
         //
         printf("\n");
+	if(count<0)
+	{
+	    *inOutErrMsg = "Failed to count content!";
+	    break;
+	}	
+
         Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
         Sys_log_line(false, true, "Creating data from input folder \"%s\" ...", inInputPath);
@@ -810,29 +816,36 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
         int const count = FileSys_getContentCount(inPath, &size, reprint_count);
         //
         printf("\n");
-        Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
+	if(count>=0)
+	{
+            Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
-        Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
-        bar_max = count;
-        bar_val = 0;
-        struct JsonEle * ele = create_json_dir(inPath, ".pib", print_next_bar); // Skips all .pib files.
-        printf("\n");
+            Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
+            bar_max = count;
+            bar_val = 0;
+            struct JsonEle * ele = create_json_dir(inPath, ".pib", print_next_bar); // Skips all .pib files.
+            printf("\n");
 
-        if(ele!=NULL)
-        {
-            Sys_log_line(false, true, "Comparing data from file and folder ...");
-            if(!JsonEle_areEqual(loadedEle, ele, true))
+            if(ele!=NULL)
             {
-                *inOutErrMsg = "Folder contents are different from saved data!";
-            }
+                Sys_log_line(false, true, "Comparing data from file and folder ...");
+                if(!JsonEle_areEqual(loadedEle, ele, true))
+                {
+                    *inOutErrMsg = "Folder contents are different from saved data!";
+                }
 
-            JsonEle_delete(ele);
-            ele = NULL;
-        }
-        else
-        {
-            *inOutErrMsg = "Failed to create data from folder!";
-        }
+                JsonEle_delete(ele);
+                ele = NULL;
+            }
+            else
+            {
+                *inOutErrMsg = "Failed to create data from folder!";
+            }
+	}
+	else
+	{
+	    *inOutErrMsg = "Failed to count content!";
+	}
 
         JsonEle_delete(loadedEle);
         loadedEle = NULL;
@@ -854,10 +867,9 @@ static void cmd_create(char const * const inPath, char const * * const inOutErrM
     int const count = FileSys_getContentCount(inPath, &size, reprint_count);
     //
     printf("\n");
-    Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
-
     if(count>=0)
     {
+        Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
         Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
         bar_max = count;
         bar_val = 0;
@@ -883,10 +895,8 @@ static void cmd_create(char const * const inPath, char const * * const inOutErrM
     }
     else
     {
-        *inOutErrMsg = "Failed to count files and folders!";
+        *inOutErrMsg = "Failed to count content!";
     }
-
-
 }
 
 int main(int argc, char* argv[])
@@ -979,7 +989,6 @@ int main(int argc, char* argv[])
                 int const count = FileSys_getContentCount(inputDirPath, &size, reprint_count);
                 //
                 printf("\n");
-
                 if(count<0)
                 {
                     Sys_log_line(false, true, "Failed to count content of \"%s\"!", inputDirPath);
