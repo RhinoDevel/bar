@@ -32,7 +32,12 @@ char * FileSys_GetFullPath(char const * const inPath, char const * const inName)
  */
 char * FileSys_GetAbsPath(char const * const inPath);
 
-enum FileSys_EntryType FileSys_GetEntryType(char const * const inPath);
+/** Return entry type.
+ *
+ * - If optional inOutFileSize pointer given is not NULL and entry type is FileSys_EntryType_File,
+ *   it will be filled with the file's size.
+ */
+enum FileSys_EntryType FileSys_GetEntryType(char const * const inPath, off_t * const inOutFileSize);
 
 off_t FileSys_GetFileSize(char const * const inPath);
 

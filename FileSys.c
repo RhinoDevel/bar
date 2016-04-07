@@ -50,7 +50,7 @@ char * FileSys_GetAbsPath(char const * const inPath)
     return retVal;
 }
 
-enum FileSys_EntryType FileSys_GetEntryType(char const * const inPath)
+enum FileSys_EntryType FileSys_GetEntryType(char const * const inPath, off_t * const inOutFileSize)
 {
     enum FileSys_EntryType retVal = FileSys_EntryType_Invalid;
     struct stat s;
@@ -68,6 +68,11 @@ enum FileSys_EntryType FileSys_GetEntryType(char const * const inPath)
             if(S_ISREG(s.st_mode))
             {
                 retVal = FileSys_EntryType_File;
+
+                if(inOutFileSize!=NULL)
+                {
+                    *inOutFileSize = s.st_size;
+                }
             }
             else // Add more types, here..
             {
@@ -236,7 +241,7 @@ bool FileSys_delete(char const * const inPath)
 {
     bool retVal = false;
 
-    switch(FileSys_GetEntryType(inPath))
+    switch(FileSys_GetEntryType(inPath, NULL))
     {
         case FileSys_EntryType_File:
             if(unlink(inPath)==0)
@@ -410,7 +415,7 @@ bool FileSys_copy(char const * const inInputPath, char const * const inOutputPat
     assert(inInputPath!=NULL);
     assert(inOutputPath!=NULL);
 
-    switch(FileSys_GetEntryType(inInputPath))
+    switch(FileSys_GetEntryType(inInputPath, NULL))
     {
         case FileSys_EntryType_File:
             retVal = FileSys_copyFile(inInputPath, inOutputPath);
@@ -520,8 +525,9 @@ int FileSys_getContentCount(char const * const inPath, off_t * const inOutSize, 
             if((strcmp(e->d_name, ".")!=0)&&(strcmp(e->d_name, "..")!=0))
             {
                 char * const fullPath = FileSys_GetFullPath(inPath, e->d_name);
+                off_t fileSize = -1;
 
-                switch(FileSys_GetEntryType(fullPath))
+                switch(FileSys_GetEntryType(fullPath, &fileSize))
                 {
                     case FileSys_EntryType_File:
                         ++retVal;
@@ -529,16 +535,14 @@ int FileSys_getContentCount(char const * const inPath, off_t * const inOutSize, 
                         {
                             (*inIncrementFunc)();
                         }
+                        if(fileSize==-1)
+                        {
+                            errOcc = true;
+                            break;
+                        }
                         if(inOutSize!=NULL)
                         {
-                            off_t const size = FileSys_GetFileSize(fullPath); // MT_TODO: TEST: Increase (double?) speed by using lstat() just once for getting entry type and size!
-
-                            if(size==-1)
-                            {
-                                errOcc = true;
-                                break;
-                            }
-                            *inOutSize += size;
+                            *inOutSize += fileSize;
                         }
                         break;
 

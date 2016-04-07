@@ -139,7 +139,7 @@ static struct JsonEle * create_json_dir(char const * const inPath, char const * 
 
                 assert((fullPath!=NULL)&&(fullPath[0]!='\0'));
 
-                switch(FileSys_GetEntryType(fullPath))
+                switch(FileSys_GetEntryType(fullPath, NULL))
                 {
                     case FileSys_EntryType_Dir:
                         ele = create_json_subdir(inPath, entry->d_name, inAddEntryFunc); // *** "RECURSION" ***
@@ -581,7 +581,7 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
 	{
 	    *inOutErrMsg = "Failed to count content!";
 	    break;
-	}	
+	}
 
         Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
