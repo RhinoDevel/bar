@@ -18,7 +18,7 @@
 #include "Str.h"
 #include "Sys.h"
 #include "Deb.h"
-#include "Sha1.h"
+#include "Fnv1a.h"
 #include "FileSys.h"
 #include "Stack.h"
 #include "ProgressBar.h"
@@ -64,7 +64,7 @@ static struct JsonEle * create_json_file(char const * const inPath, char const *
     assert((fullPath!=NULL)&&(fullPath[0]!='\0'));
 
     JsonObj_add(obj, Str_copy_create("name"), JsonType_string, Str_copy_create(inName));
-    JsonObj_add(obj, Str_copy_create("sha1"), JsonType_string, Sha1_create_string_from_path(fullPath));
+    JsonObj_add(obj, Str_copy_create("fnv1a"), JsonType_string, Fnv1a_create_string_from_path(fullPath));
 
     retVal = (struct JsonEle *)(obj->ele->val->val);
     free(fullPath);
@@ -372,8 +372,8 @@ static bool add_missing_paths_from_content_arr(
             //
             if((inOutStackChanged!=NULL)&&(!missing)&&(!isDir))
             {
-                struct JsonEle const * checksum = JsonEle_objGetPropVal(entry, "sha1"),
-                    * contentChecksum = JsonEle_objGetPropVal(contentEntry, "sha1");
+                struct JsonEle const * checksum = JsonEle_objGetPropVal(entry, "fnv1a"),
+                    * contentChecksum = JsonEle_objGetPropVal(contentEntry, "fnv1a");
                 char const * checksumStr = NULL,
                     * contentChecksumStr = NULL;
 
@@ -930,7 +930,7 @@ int main(int argc, char* argv[])
             case 'b': // Backup (from given input to given output folder with automatic ".pib" file creation, if not existing).
                 if(argc!=(1+3))
                 {
-                    errMsg = "Please enter backup command and path to input and output folder like: pib v <input path> <output path>";
+                    errMsg = "Please enter backup command and path to input and output folder like: pib b <input path> <output path>";
                     break;
                 }
                 inputDirPath = argv[2];
