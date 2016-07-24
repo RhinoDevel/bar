@@ -3,6 +3,7 @@
 
 // MT_TODO: TEST: Not 100% like JSON standard:
 //
+// - Only " signs get escaped and unescaped in strings.
 // - No UTF-8 / Unicode support.
 // - JSON number format might not be "perfect" (formatting of floating-point numbers, no integer support).
 

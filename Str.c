@@ -146,7 +146,9 @@ char* Str_string_create(char const * const inStr, size_t const inLen, char const
 
     do
     {
-        size_t terminatorPos = 0;
+        size_t terminatorPos = 0,
+            escapedCount = 0,
+            bufPos = 0;
 
         if(((*inOutIndex)+2)>=inLen)
         {
@@ -165,15 +167,13 @@ char* Str_string_create(char const * const inStr, size_t const inLen, char const
         {
             if(inStr[*inOutIndex]==inTag)
             {
-                // MT_TODO: TEST: Adding '\' to output is wrong,
-                //                because '\"' is just standing for one character - fix this!
-                //
                 if(inStr[(*inOutIndex)-1]!='\\')
                 {
                     terminatorPos = *inOutIndex;
                     ++(*inOutIndex); // (consumes closing ")
                     break;
                 }
+                ++escapedCount;
             }
             ++(*inOutIndex);
         }
@@ -182,13 +182,25 @@ char* Str_string_create(char const * const inStr, size_t const inLen, char const
             break;
         }
 
-        size_t const len = terminatorPos-firstCharPos; // (without terminator)
+        size_t const len = terminatorPos-firstCharPos, // (without terminator)
+            bufLen = len-escapedCount+1,
+            lastBufPos = bufLen-1;
 
-        buf = malloc((len+1)*(sizeof *buf));
+        buf = malloc(bufLen*(sizeof *buf));
         assert(buf!=NULL);
 
-        strncpy(buf, inStr+firstCharPos, len);
-        buf[len] = '\0';
+        size_t const firstCharPosPlusLen = firstCharPos+len,
+            lastCharPos = firstCharPosPlusLen-1;
+
+        for(size_t i = firstCharPos;i<firstCharPosPlusLen;++i)
+        {
+            if(!((inStr[i]=='\\')&&(i<lastCharPos)&&(inStr[i+1]==inTag)))
+            {
+                buf[bufPos++] = inStr[i];
+            }
+        }
+        assert(bufPos==lastBufPos);
+        buf[lastBufPos] = '\0';
 
         retVal = buf;
         buf = NULL;

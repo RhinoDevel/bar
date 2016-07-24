@@ -25,6 +25,49 @@
 #include "json_state_prop_begin.h"
 #include "json.h"
 
+/** Escapes given string.
+ *
+ * - Does NOT take ownership of given string.
+ * - Caller takes ownership of returned string.
+ */
+static char* escape(char * const inStr)
+{
+    assert(inStr!=NULL);
+
+    char *retVal = NULL;
+    size_t const lenIn = strlen(inStr);
+    size_t lenOut = lenIn,
+        i = 0,
+        posOut = 0;
+
+    while(i<lenIn)
+    {
+        if(inStr[i]=='"')
+        {
+            ++lenOut;
+        }
+        ++i;
+    }
+
+    retVal = malloc((lenOut+1)*sizeof(*retVal));
+    assert(retVal!=NULL);
+
+    i = 0;
+    while(i<lenIn)
+    {
+        if(inStr[i]=='"')
+        {
+            retVal[posOut++] = '\\';
+        }
+
+        retVal[posOut++] = inStr[i];
+        ++i;
+    }
+    retVal[lenOut] = '\0';
+
+    return retVal;
+}
+
 /** Takes ownership of given string.
  */
 static char* stringify(struct JsonEle * const inEle, char * const inStr)
@@ -58,11 +101,18 @@ static char* stringify(struct JsonEle * const inEle, char * const inStr)
                 break;
 
             case JsonType_string:
+            {
                 assert(strlen(retVal)>0);
+
+                char * const escaped = escape((char*)(cur->val->val));
+
                 retVal = Str_append_create(retVal, "\"");
-                retVal = Str_append_create(retVal, (char*)(cur->val->val));
+                retVal = Str_append_create(retVal, escaped);
                 retVal = Str_append_create(retVal, "\"");
+
+                free(escaped);
                 break;
+            }
 
             case JsonType_number:
             {
@@ -96,14 +146,17 @@ static char* stringify(struct JsonEle * const inEle, char * const inStr)
             case JsonType_prop:
             {
                 struct JsonProp * const jsonProp = (struct JsonProp *)(cur->val->val);
+                char * const escaped = escape(jsonProp->name);
 
                 assert(strlen(retVal)>0);
 
                 retVal = Str_append_create(retVal, "\"");
-                retVal = Str_append_create(retVal, jsonProp->name);
+                retVal = Str_append_create(retVal, escaped);
                 retVal = Str_append_create(retVal, "\"");
                 retVal = Str_append_create(retVal, ":");
                 retVal = stringify(jsonProp->ele, retVal);
+
+                free(escaped);
                 break;
             }
 
