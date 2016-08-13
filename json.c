@@ -288,6 +288,7 @@ struct JsonEle * json_read_from_file(char const * const inPath)
                     if(fread(str, sizeof *str, len, f)==len)
                     {
                         fclose(f);
+                        f = NULL;
 
                         str[len] = '\0';
 
