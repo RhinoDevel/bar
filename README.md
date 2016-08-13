@@ -10,7 +10,7 @@ This will copy all files from input to output folder and create a file `.pib` in
 
 Each time the exact same command as above will be executed after the first backup the application will look for changes in input folder and modify the output folder content to match the input folder content by just deleting, creating or updating the necessary files and subdirectories (incremental).
 
-This is done by comparing the checksums for the input folder created during each run with the checksums stored in `.pib` data file to be found in backup (output) folder.
+This is done by comparing the file checksums and file sizes for the input folder created during each run with the checksums stored in `.pib` data file to be found in backup (output) folder.
 
 The deletions, creations and updates planned will be presented to the user beforehand.
 
@@ -29,6 +29,12 @@ Checks, if the `.pib` file in the backup (output) folder matches the actual cont
 `pib c <output folder path>`
 
 (Re-)creates the `.pib` data file. File's content will reflect the backup (output) folder's contents.
+
+**Show folder informations**
+
+`pib i <folder path>`
+
+Prints count and (byte) size of all files and subfolders included in folder at given path.
 
 # License
 See the [LICENSE](https://github.com/RhinoDevel/pib/blob/master/LICENSE.md) file for license rights and limitations (ISC).
