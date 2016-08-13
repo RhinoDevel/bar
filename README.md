@@ -10,7 +10,7 @@ This will copy all files from input to output folder and create a file `.pib` in
 
 Each time the exact same command as above will be executed after the first backup the application will look for changes in input folder and modify the output folder content to match the input folder content by just deleting, creating or updating the necessary files and subdirectories (incremental).
 
-This is done by comparing the file checksums and file sizes for the input folder created during each run with the checksums stored in `.pib` data file to be found in backup (output) folder.
+This is done by comparing the file checksums and file sizes for the input folder created during each run with the checksums and sizes stored in `.pib` data file to be found in backup (output) folder.
 
 The deletions, creations and updates planned will be presented to the user beforehand.
 
