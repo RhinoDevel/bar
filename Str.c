@@ -8,6 +8,28 @@
 #include "Obj.h"
 #include "Str.h"
 
+char* Str_from_long_create(long const inVal)
+{
+    char* retVal = NULL;
+    char const * const formatStr = "%ld";
+    char dummy[] = { '\0' };
+    int const strLen = snprintf(dummy, sizeof(dummy)*sizeof(char), formatStr, inVal); // Without terminating '\0'.
+
+    if(strLen>0)
+    {
+        retVal = malloc((((size_t)strLen)+1)*(sizeof *retVal));
+        assert(retVal!=NULL);
+
+        if(sprintf(retVal, formatStr, inVal)!=strLen)
+        {
+            free(retVal);
+            retVal = NULL;
+        }
+    }
+
+    return retVal;
+}
+
 char* Str_from_double_create(double const inVal)
 {
     char* retVal = NULL;

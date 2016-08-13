@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+char* Str_from_long_create(long const inVal);
+    
 char* Str_from_double_create(double const inVal);
 
 /** Return a new string holding given string A plus string B.
