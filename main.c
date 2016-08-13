@@ -62,9 +62,11 @@ static struct JsonEle * create_json_file(char const * const inPath, char const *
 
     assert(obj!=NULL);
     assert((fullPath!=NULL)&&(fullPath[0]!='\0'));
+    assert(sizeof(off_t)==sizeof(long));
 
     JsonObj_add(obj, Str_copy_create("name"), JsonType_string, Str_copy_create(inName));
     JsonObj_add(obj, Str_copy_create("fnv1a"), JsonType_string, Fnv1a_create_string_from_path(fullPath));
+    JsonObj_add(obj, Str_copy_create("size"), JsonType_string, Str_from_long_create(FileSys_GetFileSize(fullPath)));
 
     retVal = (struct JsonEle *)(obj->ele->val->val);
     free(fullPath);
@@ -282,6 +284,51 @@ static struct JsonEle const * get_entry_with_name_from_content_arr(struct JsonEl
     return retVal;
 }
 
+static char const * get_string(struct JsonEle const * const inFirstEle, char const * const inPropName)
+{
+    struct JsonEle const * ele = JsonEle_objGetPropVal(inFirstEle, inPropName);
+
+    assert(ele!=NULL);
+    assert(ele->val!=NULL);
+    assert(ele->val->val!=NULL);
+
+    if(ele->val->type!=JsonType_string)
+    {
+        return NULL;
+    }
+    return (char const *)(ele->val->val);
+}
+
+/**
+ * - Given in/out pointer indicates, if property values are equal or not, return value will be set to false on error. 
+ */
+static bool fill_are_equal(struct JsonEle const * const inFirstEleA, struct JsonEle const * const inFirstEleB, char const * const inPropName, bool * const inOutAreEqual)
+{
+    assert(inFirstEleA!=NULL);
+    assert(inFirstEleB!=NULL);
+    assert((inPropName!=NULL)&&(strlen(inPropName)>0));
+    assert(inOutAreEqual!=NULL);
+
+    *inOutAreEqual = false;
+    
+    char const * const aStr = get_string(inFirstEleA, inPropName);
+    
+    if(aStr==NULL)
+    {
+        return false;
+    }
+    
+    char const * const bStr = get_string(inFirstEleB, inPropName);
+    
+    if(bStr==NULL)
+    {
+        return false;
+    }
+
+    *inOutAreEqual = (strcmp(aStr, bStr)==0);
+    return true;
+}
+
 static bool add_missing_paths_from_content_arr(
     struct JsonEle const * const inArr,
     struct JsonEle const * const inValues,
@@ -372,34 +419,39 @@ static bool add_missing_paths_from_content_arr(
             //
             if((inOutStackChanged!=NULL)&&(!missing)&&(!isDir))
             {
-                struct JsonEle const * checksum = JsonEle_objGetPropVal(entry, "fnv1a"),
-                    * contentChecksum = JsonEle_objGetPropVal(contentEntry, "fnv1a");
-                char const * checksumStr = NULL,
-                    * contentChecksumStr = NULL;
-
-                assert(checksum!=NULL);
-                assert(checksum->val!=NULL);
-                assert(checksum->val->val!=NULL);
-                assert(contentChecksum!=NULL);
-                assert(contentChecksum->val!=NULL);
-                assert(contentChecksum->val->val!=NULL);
-
-                if(checksum->val->type!=JsonType_string)
+                bool areEqual = false;
+                
+                // Checking files' sizes AND checksums,
+                // because the probability of two files with the same length
+                // producing the same hash is highly unlikely.
+                //
+                // ONE EXAMPLE, WHERE pib BACKUP FAILS, IS A FILE WITH CONTENT
+                //
+                // declinate
+                //
+                // WHERE THE CONTENT GOT CHANGED BEFORE NEXT BACKUP TO
+                //
+                // macallums
+                //
+                // , BECAUSE THIS IS A COLLISION WITH EQUAL FILE SIZE!
+                //
+                // Also see: http://programmers.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed#145633
+                
+                if(!fill_are_equal(entry, contentEntry, "size", &areEqual))
                 {
                     retVal = false;
                     break;
                 }
-                if(contentChecksum->val->type!=JsonType_string)
+                if(areEqual) // <=> File sizes are the same. => Check hashes:
                 {
-                    retVal = false;
-                    break;
+                    if(!fill_are_equal(entry, contentEntry, "fnv1a", &areEqual))
+                    {
+                        retVal = false;
+                        break;
+                    }
                 }
-                checksumStr = (char const *)(checksum->val->val);
-                contentChecksumStr = (char const *)(contentChecksum->val->val);
-                assert(strlen(checksumStr)==40);
-                assert(strlen(contentChecksumStr)==40);
-
-                if(strcmp(checksumStr, contentChecksumStr)!=0)
+                
+                if(!areEqual)
                 {
                     if(inPath!=NULL)
                     {
@@ -577,11 +629,11 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
         int const count = FileSys_getContentCount(inInputPath, &size, reprint_count);
         //
         printf("\n");
-	if(count<0)
-	{
-	    *inOutErrMsg = "Failed to count content!";
-	    break;
-	}
+        if(count<0)
+        {
+            *inOutErrMsg = "Failed to count content!";
+            break;
+        }
 
         Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
@@ -805,19 +857,17 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
     Sys_log_line(false, true, "Reading data from file \"%s\" ...", fullPath);
     struct JsonEle * loadedEle = json_read_from_file(fullPath);
 
-    free(fullPath);
-    fullPath = NULL;
-
     if(loadedEle!=NULL)
     {
         off_t size = 0;
         reprint_count_val = 0;
-        reprint_count_prefix = "Content count (files & folders): ";
-        int const count = FileSys_getContentCount(inPath, &size, reprint_count);
+        reprint_count_prefix = "Content count (files & folders - with .pib file): ";
+        int const count = FileSys_getContentCount(inPath, &size, reprint_count)-1; // Prints count WITH .pib file included (subtraction is done AFTER printing..)!
+        size -= FileSys_GetFileSize(fullPath); // Subtracts byte size of .pib file.
         //
         printf("\n");
-	if(count>=0)
-	{
+        if(count>=0)
+        {
             Sys_log_line(false, true, "%llu bytes.", (unsigned long long int)size);
 
             Sys_log_line(false, true, "Creating data from folder \"%s\" ...", inPath);
@@ -841,11 +891,11 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
             {
                 *inOutErrMsg = "Failed to create data from folder!";
             }
-	}
-	else
-	{
-	    *inOutErrMsg = "Failed to count content!";
-	}
+        }
+        else
+        {
+            *inOutErrMsg = "Failed to count content!";
+        }
 
         JsonEle_delete(loadedEle);
         loadedEle = NULL;
@@ -854,6 +904,9 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
     {
         *inOutErrMsg = "Failed to load data from file!";
     }
+    
+    free(fullPath);
+    fullPath = NULL;
 }
 
 static void cmd_create(char const * const inPath, char const * * const inOutErrMsg)
