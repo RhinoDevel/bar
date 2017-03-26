@@ -300,7 +300,7 @@ static char const * get_string(struct JsonEle const * const inFirstEle, char con
 }
 
 /**
- * - Given in/out pointer indicates, if property values are equal or not, return value will be set to false on error. 
+ * - Given in/out pointer indicates, if property values are equal or not, return value will be set to false on error.
  */
 static bool fill_are_equal(struct JsonEle const * const inFirstEleA, struct JsonEle const * const inFirstEleB, char const * const inPropName, bool * const inOutAreEqual)
 {
@@ -310,16 +310,16 @@ static bool fill_are_equal(struct JsonEle const * const inFirstEleA, struct Json
     assert(inOutAreEqual!=NULL);
 
     *inOutAreEqual = false;
-    
+
     char const * const aStr = get_string(inFirstEleA, inPropName);
-    
+
     if(aStr==NULL)
     {
         return false;
     }
-    
+
     char const * const bStr = get_string(inFirstEleB, inPropName);
-    
+
     if(bStr==NULL)
     {
         return false;
@@ -420,7 +420,7 @@ static bool add_missing_paths_from_content_arr(
             if((inOutStackChanged!=NULL)&&(!missing)&&(!isDir))
             {
                 bool areEqual = false;
-                
+
                 // Checking files' sizes AND checksums,
                 // because the probability of two files with the same length
                 // producing the same hash is highly unlikely.
@@ -436,7 +436,7 @@ static bool add_missing_paths_from_content_arr(
                 // , BECAUSE THIS IS A COLLISION WITH EQUAL FILE SIZE!
                 //
                 // Also see: http://programmers.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed#145633
-                
+
                 if(!fill_are_equal(entry, contentEntry, "size", &areEqual))
                 {
                     retVal = false;
@@ -450,7 +450,7 @@ static bool add_missing_paths_from_content_arr(
                         break;
                     }
                 }
-                
+
                 if(!areEqual)
                 {
                     if(inPath!=NULL)
@@ -756,16 +756,22 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
 
         // Create files:
         //
+
         if(!Stack_isEmpty(toCreate))
         {
             Sys_log_line(false, true, "Creating folders and files ...");
-            do
+
+            int const count = Stack_count(toCreate);
+
+            assert(count>0);
+
+            ProgressBar_print(1, 1, count+1, 40, true);
+            for(int i = 0;i<count;++i)
             {
                 char * const path = Stack_pop(toCreate), // (takes ownership)
                     * const fullInputPath = FileSys_GetFullPath(inInputPath, path),
                     * const fullOutputPath = FileSys_GetFullPath(inOutputPath, path);
 
-                Deb_line("\"%s\"", path);
                 if(!FileSys_copy(fullInputPath, fullOutputPath))
                 {
                     *inOutErrMsg = "Failed to create at least one file or folder from output folder!";
@@ -779,11 +785,15 @@ static void cmd_backup(char const * const inInputPath, char const * const inOutp
                 free(path);
                 free(fullInputPath);
                 free(fullOutputPath);
-            }while(!Stack_isEmpty(toCreate));
+
+                ProgressBar_print(1, i+2, count+1, 40, true);
+            }
             if(errOcc)
             {
                 break;
             }
+            assert(Stack_isEmpty(toCreate));
+            printf("\n");
         }
 
         // Update files:
@@ -904,7 +914,7 @@ static void cmd_verify(char const * const inPath, char const * * const inOutErrM
     {
         *inOutErrMsg = "Failed to load data from file!";
     }
-    
+
     free(fullPath);
     fullPath = NULL;
 }
