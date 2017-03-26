@@ -69,6 +69,10 @@ void Stack_flip(struct Stack * const inStack);
  */
 bool Stack_isEmpty(struct Stack const * const inStack);
 
+/** Return count of objects on stack given.
+ */
+int Stack_count(struct Stack const * const inStack);
+
 #ifdef __cplusplus
 }
 #endif

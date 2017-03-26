@@ -120,3 +120,18 @@ bool Stack_isEmpty(struct Stack const * const inStack)
 
     return inStack->top==NULL;
 }
+
+int Stack_count(struct Stack const * const inStack)
+{
+    assert(inStack!=NULL);
+
+    int c = 0;
+    struct StackEle const * e = inStack->top;
+
+    while(e!=NULL)
+    {
+        ++c;
+        e = e->below;
+    }
+    return c;
+}
