@@ -637,7 +637,7 @@ unsigned char * FileSys_loadFile(
 
     if(fread(buf, sizeof(*buf), size, file)!=size)
     {
-        Deb_line("Error: Failed to completely load character ROM file content!")
+        Deb_line("Error: Failed to completely load file content!")
         return NULL;
     }
 
